@@ -1,0 +1,44 @@
+import numpy as np
+
+from finals.boxes import divide_data_boxes
+from finals.boxes import make_pi
+
+n_boxes = 16 
+n_points = 1e6
+exp = 0.4 
+
+def get_points(center = [25, 25, 25], start_radius = 25, end_radius = 50, n_points = int(1e6), ids_add = True, exp = 2):
+    starts = (np.random.rand(n_points, 3) - 0.5) * (2.0 * start_radius) + center
+    deltas = starts - center 
+    abs_delta = np.abs(deltas)
+    signs = np.sign(deltas)
+    extra = (end_radius - start_radius) * (abs_delta / start_radius) ** exp 
+    end_abs = abs_delta + extra 
+    ends = center + signs * end_abs 
+
+    ids = np.arange(1, n_points + 1)
+    start = np.column_stack((starts, ids))
+    end = np.column_stack((ends, ids))
+    return start, end
+
+start, end = get_points(center=[50, 50, 50], start_radius=25, end_radius=50, n_points=int(n_points), exp=exp)
+boxsize = [100, 100, 100]
+
+start = np.array(start)
+end = np.array(end)
+boxsize = np.array(boxsize)
+
+start = divide_data_boxes(start, n_boxes, boxsize)
+end = divide_data_boxes(end, n_boxes, boxsize)
+
+n = len(start)
+pi, mu, nu = make_pi(start, end, n)
+
+filenamepi = "./results/tests_with_motion_new/nonuniform_expansion_pi-nbox" + str(n_boxes) + "-" + str(int(n_points)) + "-exp" + str(exp) + ".csv" 
+with open(filenamepi, 'w') as f:
+    np.savetxt(f, pi, delimiter=',')
+
+filenamemunu = "./results/tests_with_motion_new/nonuniform_expansion_munu-nbox" + str(n_boxes) + "-" + str(int(n_points)) + "-exp" + str(exp) + ".csv" 
+with open(filenamemunu, 'w') as f:
+    np.savetxt(f, np.column_stack((mu, nu)), delimiter=',')
+    print(f"{filenamepi} written to csv succesfully")

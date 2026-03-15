@@ -1,0 +1,189 @@
+\documentclass[twoside,single]{lion-msc}
+
+\title{Inverse Optimal Transport in Cosmological Simulations}
+\author{B.A. Sturre}
+
+\affiliation{Leiden Observatory, Leiden University \\
+Mathematical Institute, Leiden University}
+
+%\address{P.O. Box 9500, 2300 RA Leiden, The Netherlands}
+
+%\newdate{date}{\day}{\month}{\year}  
+\newdate{date}{13}{06}{2025}
+%\newdate{date}{\today}
+\date{\displaydate{date}}
+\studentid{3635066} 
+\supervisor{Dr. M. Schaller}
+\corrector{Dr. E. Sellentin and} 
+\secondmath{Dr. D. van der Hoeven}
+
+% \degree{Bachelor of Science} 
+\major{Mathematics and Astronomy}
+
+% optional cover picture - should be jpg or pdf
+%\coverpicture{\includegraphics[width=5cm]{FLAMINGO.png}}
+
+\usepackage{tocloft}
+\hypersetup{colorlinks=false}
+\usepackage{amsmath}
+\usepackage{parskip}
+\usepackage{enumerate}
+\usepackage{url}
+\usepackage{float}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{pdfpages}
+\usepackage{amstext}
+\usepackage{caption}
+\usepackage{amsthm}
+\usepackage{pdfpages}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{hyperref}
+% \usepackage{eufrak}
+\usepackage{enumerate}
+\usepackage{multicol}
+\usepackage{lipsum}
+\usepackage{geometry}
+\usepackage{comment}
+\usepackage{subfig}
+\usepackage{subcaption}
+\usepackage{bbm}
+\usepackage{enumitem}
+\usepackage{algorithm2e}
+\usepackage{chngcntr}
+\usepackage{titlesec}
+\usepackage{calc}
+\usepackage{sectsty}
+\usepackage{natbib}
+\usepackage{hyperref}
+\geometry{
+	a4paper,
+	bottom=25mm,
+	right=25mm,
+	left=25mm,
+	top=25mm,
+}
+
+\def\N{\mathbb{N}} \def\Z{\mathbb{Z}} \def\Q{\mathbb{Q}} \def\R{\mathbb{R}} \def\C{\mathbb{C}} \def\ra{\rightarrow}
+\def\Ra{\Rightarrow} \def\f{\frac} \def\del{\partial} \def\ora{\overrightarrow} \def\si{\;\mathrm} \def\T{\mathcal{T}} \def\P{\mathbb{P}} \def\tab{\;\;\;} \def\E{\mathbb{E}} \def\d{\;\text{d}} \def\L{\mathcal{L}} \def\pihat{\hat{\pi}} \def\C{\mathcal{C}} \def\W{\mathcal{W}} \def\chat{\hat{c}}
+
+\DeclareMathOperator*{\prox}{prox} \DeclareMathOperator*{\argmin}{argmin} \DeclareMathOperator*{\infim}{inf}
+
+\def\tellmewhy{\begin{figure*}[!ht]
+		\centering 
+		\includegraphics[width=0.15\textwidth]{../../tellmewhy.jpeg}
+\end{figure*}}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=mystyle}
+\RestyleAlgo{ruled}
+
+\titleformat{\chapter}[hang]
+{\itshape\huge\bfseries}
+{\thechapter.}
+{1em}
+{}
+[\titlerule] 
+
+\sectionfont{\itshape\Large}
+\subsectionfont{\itshape\large}
+\subsubsectionfont{\itshape\normalsize}
+%\paragraphfont{\itshape\small}
+%\subparagraphfont{\itshape\small}
+
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\newtheoremstyle{ex}
+{\topsep}   
+{\topsep}   
+{\normalfont}
+{0pt}     
+{\bfseries}
+{.}       
+{.5em}     
+{}         
+\theoremstyle{ex}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+\numberwithin{equation}{chapter}
+
+
+\hypersetup{
+	colorlinks=true,    % False: boxed links; True: colored links
+	linkcolor=blue,     % Internal links (sections, etc.)
+	citecolor=blue,      % Citations
+	urlcolor=magenta    % URLs
+}
+
+\abstract{
+The theory of Optimal Transport (OT) provides a powerful mathematical framework for understanding dynamics, with applications in various disciplines. In cosmology, OT can offer a unique view through which to analyze structure formation and evolution, by connecting initial and final density configurations.  
+In this thesis, we investigate the structure formation in cosmology using an inverse OT approach, focusing on the movement of particles. We utilize data from the FLAMINGO simulations, segmented into smaller boxes for computational efficiency. Our primary objective was to infer the cost matrix that is responsible for the particle motion within these simulations. We developed the theory of inverse OT and developed an algorithm to solve for the cost matrix, while addressing the ill-posed nature of inverse OT. This algorithm is applied to both reference cases and the FLAMINGO simulation data. The derived cost matrix shows a high degree of symmetry, consistent with an isotropic universe. As a proof of concept, a Markov Chain Monte Carlo simulation was done to test if the FLAMINGO cost matrix is a linear combination of reference cases. These Markov chains did not converge. However, this is thought to be because of the limited number of reference cases. 
+}  
+% limit your self to 1/2 page or 500 words
+
+% texcount final_submission.tex -inc -incbib -sum
+
+\begin{document}
+	
+\pagenumbering{roman}
+\maketitle
+\tableofcontents
+\cleardoublepage
+
+%\listoffigures
+%\newpage
+%\listoftables
+%\newpage
+
+\pagenumbering{arabic}
+
+\include{intro}
+\include{ch2}
+\include{data}
+\include{ch3}
+\include{recovering_cost}
+\include{outlook}
+
+\phantomsection
+\addcontentsline{toc}{chapter}{References}
+\bibliographystyle{apalike}
+\bibliography{papers}
+
+\include{appendix}
+
+
+
+
+
+\end{document}
+

@@ -1,0 +1,72 @@
+This is BibTeX, Version 0.99d (TeX Live 2023/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: inverse_optimal_transport_in_cosmological_simulations_Benthe_Sturre.aux
+A level-1 auxiliary file: intro.aux
+A level-1 auxiliary file: ch2.aux
+A level-1 auxiliary file: data.aux
+A level-1 auxiliary file: ch3.aux
+A level-1 auxiliary file: recovering_cost.aux
+A level-1 auxiliary file: outlook.aux
+The style file: apalike.bst
+A level-1 auxiliary file: appendix.aux
+Database file #1: papers.bib
+I was expecting a `,' or a `}'---line 349 of file papers.bib
+ : 
+ : https://arxiv.org/abs/2112.09754
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Repeated entry---line 426 of file papers.bib
+ : @book{grimmett2014
+ :                   ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 461 of file papers.bib
+ : @article{monge1781
+ :                   ,
+I'm skipping whatever remains of this entry
+You're missing a field name---line 508 of file papers.bib
+ : isbn      = {978-3-030-39414-1}, 
+ :                                  % Hardcover ISBN
+I'm skipping whatever remains of this entry
+Warning--empty journal in nikakhtar2024
+You've used 31 entries,
+            1935 wiz_defined-function locations,
+            660 strings with 9991 characters,
+and the built_in function-call counts, 13222 in all, are:
+= -- 1216
+> -- 773
+< -- 20
++ -- 290
+- -- 276
+* -- 1202
+:= -- 2395
+add.period$ -- 89
+call.type$ -- 31
+change.case$ -- 290
+chr.to.int$ -- 31
+cite$ -- 32
+duplicate$ -- 416
+empty$ -- 775
+format.name$ -- 325
+if$ -- 2496
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 30
+newline$ -- 151
+num.names$ -- 93
+pop$ -- 247
+preamble$ -- 1
+purify$ -- 293
+quote$ -- 0
+skip$ -- 322
+stack$ -- 0
+substring$ -- 752
+swap$ -- 33
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 174
+warning$ -- 1
+while$ -- 82
+width$ -- 0
+write$ -- 384
+(There were 4 error messages)

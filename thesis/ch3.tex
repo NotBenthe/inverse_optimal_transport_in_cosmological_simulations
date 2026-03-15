@@ -1,0 +1,227 @@
+\chapter[Algorithm for Inverse Optimal Transport]{Algorithm for Inverse \\Optimal Transport}
+\label{ch:entropyregiOT}
+Our objective is to find the cost matrix of the observed transport in our data. To find the cost matrix, we will use an algorithm inspired by \citet{ma2021}. We will follow part of their derivation, while discretizing some steps along the way. As we are working in a discrete case, all our input and output variables will be vectors and matrices. Let $n \in \Z_{\geq 1}$ be the number of points or, in our case, the number of boxes as described in Section~\ref{sec:boxes}. Our input and output spaces are the same space, $X \subseteq \R^m$ and $Y \subseteq \R^{n}$, with $m=n$. However, we will keep $m$ and $n$ separate for clarification in the derivations. Then, $\mu \in \Delta^{m-1}, \nu \in \Delta^{n-1}$ are probability vectors, with $\Delta^{n-1}:=\left\{x=\left(x_{1}, \ldots, x_{n}\right) \in\right.$ $\left.\mathbb{R}^{n}: x_{i} \geq 0, \sum_{i=1}^{n} x_{i}=1\right\}$ the standard probability simplex in $\mathbb{R}^{n}$, and $\pi, c \in \R^{m \times n}$. Note that $\mu$ and $\nu$ are (discrete) measures, but we can view them as vectors as we can assume all our data points are distinct and fixed with the same weight. With this notation, equation~\eqref{eq:eotcuturi} can be written as
+\begin{equation}
+	\min _{\pi \in \mathbb{R}^{m \times n}}\left\{\langle c, \pi\rangle: \pi \geq 0, \pi \mathbbm{1}_{n}=\mu, \pi^{\top} \mathbbm{1}_{m}=\nu\right\},
+	\label{eq:cpi}
+\end{equation}
+with $\langle c, \pi\rangle =\sum_{i, j} c_{i j} \pi_{i j}$ the inner product and $\mathbbm{1}_{n}:=(1, \ldots, 1)^{\top} \in \mathbb{R}^{n}$, as before. \par 
+A modification of equation~\eqref{eq:cpi} was proposed by \citet{cuturi2013}, with an additional entropy regularization term in the objective function, as in Section~\ref{sec:entropyreg}:
+\begin{equation}
+	\min _{\pi \in \mathbb{R}^{m \times n}}\left\{\langle c, \pi\rangle-\varepsilon H(\pi): \pi \mathbbm{1}_{n}=\mu, \pi^{\top} \mathbbm{1}_{m}=\nu\right\},
+	\label{eq:entropy}
+\end{equation}
+where $H(\pi):=-\langle\pi, \log \pi\rangle=-\sum_{i, j} \pi_{i j}\left(\log \pi_{i j}\right)$ is the Shannon entropy of $\pi$, as in equation~\eqref{eq:entropyH}, and $\varepsilon>0$ is the weight of the entropy regularization. Note that there are different definitions of $H$, some have an extra term $-1$. However, this extra term does not matter for our purposes, as long as we are consistent with our definition of $H$. Due to the entropy term in \eqref{eq:entropy}, the inequality constraint in equation~\eqref{eq:cpi} is eliminated. Furthermore, the objective function in equation~\eqref{eq:entropy} becomes strictly convex, therefore having a unique solution \citep{ma2021}. \par 
+For the rest of this chapter, let us write $c$ for the theoretical cost matrix, $c^*$ for the actual cost matrix and $\chat$ for the cost matrix as retrieved from an algorithm.
+
+\section{The Dual Formulation of Inverse Optimal Transport}
+Now, let $\Pi(\mu, \nu)$ be the set of probability measures $\pi \in P(X \times Y)$ such that $\pi(A \times Y) = \mu(A)$ and $\pi(X \times B) = \nu(B)$, for any measurable set $A \subseteq X, B \subseteq Y$. Thus $\mu_i = \sum_j \pi_{ij}$ and $\nu_j = \sum_i \pi_{ij}$. Let $\alpha \in \R^m$ and $\beta \in \R^n$ be the Lagrangian multipliers corresponding to the marginal constraints. We can then rewrite equation~\eqref{eq:entropy} as 
+\begin{equation}
+	\min _{\pi \in \Pi(\mu, \nu)}\left\{\langle c, \pi\rangle-\varepsilon H(\pi)\right\}.
+	\label{eq:entropynew}
+\end{equation}
+Now, the dual problem of equation~\eqref{eq:entropynew} can be calculated. 
+\vspace{0.3cm}
+\begin{lemma}
+	The dual problem of \eqref{eq:entropynew} is given by 
+	\begin{equation}
+		D(\alpha, \beta) := \sum_{i=1}^m \alpha_i \mu_i + \sum_{j=1}^n \beta_j \nu_j - \varepsilon \sum_{i=1}^m \sum_{j=1}^n \exp\left(\frac{\alpha_i + \beta_j - c_{ij} - \varepsilon}{\varepsilon}\right),
+		\label{eq:Dinproof}
+	\end{equation}
+	and the dual optimization problem is given by 
+	\begin{equation}
+		\max_{\alpha \in \R^m, \beta\in \R^n} D(\alpha, \beta).
+		\label{eq:dual}
+	\end{equation}
+	\label{lemma:dual}
+\end{lemma}
+The proof of this lemma can be found in Appendix~\ref{sec:prooflemmadual}. \par 
+Let $(\alpha^*, \beta^*)$ be the optimal solution for the dual problem. Note that from the proof of Lemma~\ref{lemma:dual}, equation~\eqref{eq:rhodef} holds:
+\begin{equation}
+	\pi_{ij}^* = \exp\left[\f{\alpha_i^* + \beta_j^* - c^*_{ij} - \varepsilon}{\varepsilon}\right] .
+	\label{eq:pi}
+\end{equation}
+Now, let us consider the inverse problem: suppose we are given $\mu \in \R^m$, $\nu \in \R^n$ and $\pi^* \in \R^{m \times n}$. We then want to retrieve the cost matrix $\chat \in \R^{m \times n}$. \citep{ma2021} proposed an iOT to find $\chat$, which is, in the discretized form:
+\begin{subequations}
+	\begin{equation}
+		\chat = \min_c\; \text{KL}(\pi^*, \pi^c) + \varepsilon^{-1} R(c),  \label{eq:KLa}
+	\end{equation}
+	\begin{equation}
+		\text{such that } \pi^c = \argmin_{\pi \in \R^{m \times n}} \left\{\sum_{i,j} c_{ij} \pi_{ij} - \varepsilon H(\pi) \right\}. \label{eq:KLb}
+	\end{equation}
+	\label{eq:KL}
+\end{subequations}
+Here, KL$(\pi^*, \pi^c)$ is the (discrete) Kullback-Leibler (KL) divergence between $\pi^*$ and $\pi^c$, as in equation~\eqref{eq:KLdef} and $R(c)$ the regularization on $c$, which will be described more in Section \ref{sec:rc}. In essence, equations~\eqref{eq:KLa} and \eqref{eq:KLb} adjust $\chat$ so that the theoretical $\pi^c$, the optimal transport plan induced by $c$, is as close to the empirical $\pi^*$ as possible, measured by the KL distance. \par 
+Note that the optimization problem in equations~\eqref{eq:KLa} and \eqref{eq:KLb} is a bi-level optimization problem, which is usually quite computationally heavy. However, we can prove it is equivalent to an unconstrained problem in $c$, by using the dual form \eqref{eq:dual}. 
+\vspace{0.3cm}
+\begin{theorem}
+	The optimization problem in equations~\eqref{eq:KLa} and \eqref{eq:KLb} is equivalent to 
+	\begin{equation}
+		\min _{\alpha \in \R^m, \beta \in \R^n, c\in \R^{m \times n}} E(\alpha, \beta, c)+R(c), 
+		\label{eq:10}
+	\end{equation}
+	with 
+	\begin{equation}
+		E(\alpha, \beta, c) := \sum_{i,j} c_{ij} \pihat_{ij} - \sum_i \alpha_i \mu_i - \sum_j \beta_j \nu_j + \varepsilon \sum_{i,j} e^{(\alpha_i + \beta_j - c_{ij}-\varepsilon)/\varepsilon}.
+		\label{eq:E}
+	\end{equation}
+	Here, equivalent means that $c^*$ solves \eqref{eq:KL} if and only if $(\alpha^{c^*}, \beta^{c^*}, c^*)$ solves \eqref{eq:10} with $(\alpha^{c^*}, \beta^{c^*})$ the optimal solution for the dual problem~\eqref{eq:dual} with cost $c^*$.
+	\label{thm:2}
+\end{theorem}
+The proof can be found in Appendix~\ref{sec:proofthm2}.
+
+
+\subsection{Equivalence of Solutions}
+The possibility of solving \eqref{eq:10} more efficiently than \eqref{eq:KL}, comes from the fact that $E$ is a jointly convex functional on 
+\[\W := \R^m \times \R^n \times \R^{m \times n}.\]
+Note, however, that $E$ is not strictly convex in $(\alpha, \beta, c)$, so we cannot claim uniqueness of the minimizer - there are actually infinitely many solutions of \eqref{eq:10} with the same $\pihat$, if there is no additional constraint $R$ \citep{ma2021}. However, we can see that the optimal solution set is given by an equivalence class of some equivalence relation. \par 
+\vspace{0.3cm}
+\begin{definition}
+	$(\alpha, \beta, c)$ and $(\bar{\alpha}, \bar{\beta}, \bar{c})$ are \textbf{equivalent}, $(\alpha, \beta, c) \sim (\bar{\alpha}, \bar{\beta}, \bar{c})$, if $\alpha_i + \beta_j - c_{ij} = \bar{\alpha}_i+ \bar{\beta}_j - \bar{c}_{ij}$ for all $1 \leq i \leq m, 1 \leq j \leq n$. 
+	\label{def:equivalence}
+\end{definition}
+It is easy to see that $\sim$ is an equivalence relation over $\W$. We will omit the proof for conciseness. The equivalence relation in Definition~\ref{def:equivalence} induces a quotient space $\widetilde{\W} := \W /\sim$. Let $[(\alpha, \beta, c)] \subseteq \widetilde{\W}$ be the equivalence class of $(\alpha, \beta, c)$. Then, there holds the following for $E$: 
+\vspace{0.3cm}
+\begin{theorem}
+	The following statements are true for $E(\alpha, \beta, c)$ in \eqref{eq:10}:
+	\begin{enumerate}[label=(\roman*)]
+		\item $E(\alpha, \beta, c)$ is jointly convex in $(\alpha, \beta, c)$;
+		\item $E$ is a constant on the equivalence class $[(\alpha, \beta, c)]$ for each $(\alpha, \beta, c) \in \W$; 
+		\item The functional $\widetilde{E}: \widetilde{\W} \ra \R$ with $\widetilde{E}([(\alpha, \beta, c)]) = E(\alpha, \beta, c)$ is well defined;
+		\item If $(\alpha^*, \beta^*, c^*)$ is a solution of \eqref{eq:10}, then the optimal transport plan $\pi^*$ in \eqref{eq:KL} is given by 
+		\[\pi^*_{ij} = e^{(\alpha^*_i + \beta^*_j - c^*_{ij}-\varepsilon)/\varepsilon};\]
+		\item $[(\alpha^*, \beta^*, c^*)]$ as in $(iv)$ is the unique minimizer of $\widetilde{E}$. 
+	\end{enumerate}
+	\label{thm:3}
+\end{theorem}
+The proof can be found in Appendix~\ref{sec:proofthm3}. \par 
+From Theorem~\ref{thm:3} we can see that \eqref{eq:10} is convex as long as $R$ is convex, or imposes constraints on a convex set. But even without knowledge of a specific $R$, we can characterize the entire optimal solution set, by finding one minimizer of $E$ and making use of the equivalence relation. 
+
+\section{Algorithm Development}
+As we have seen, $\pi$ is a real-valued $m \times n$ matrix. In our case, we can divide the data into boxes, as described in Section~\ref{sec:boxes}, and define
+\[ \hat{\pi}_{i j} :=\frac{N_{i j}}{N}, \]
+with $N_{i j}$ the number of particles going from box $i$ to box $j$, and $N=\sum_{i, j} N_{i j}$. Then, we have the following optimization problem of equation~\eqref{eq:10}:
+\begin{equation}
+	\min _{\alpha\in \R^m, \beta\in\R^n, \chat\in\R^{m\times n}}\{R(\chat)-\langle\alpha, \mu\rangle-\langle\beta, \nu\rangle+\langle \chat, \hat{\pi}\rangle+s(\alpha, \beta,\chat)\} ,
+	\label{eq:10discrete}
+\end{equation}
+with $s: \mathbb{R}^{m} \times \mathbb{R}^{n} \times \R^{m \times n} \rightarrow \mathbb{R}$ given as
+\begin{equation}
+	s(\alpha, \beta, \chat):=\varepsilon \sum_{i, j} e^{\left(\alpha_{i}+\beta_{j}-\chat_{i j}-\varepsilon\right) / \varepsilon}=\varepsilon\left\langle e^{\left(\alpha_{i}+\beta_{j}-\chat_{i j}-\varepsilon\right) / \varepsilon}, 1\right\rangle .
+	\label{eq:s}
+\end{equation}
+To solve \eqref{eq:10discrete}, we can use a update scheme also known as Block Coordinate Descent (BCD). In general, BCD requires joint convexity of $E$, which is shown to be true in Theorem~\ref{thm:3}, and Lipschitz continuity of its gradient \citep{beck2015}, which is not true in our case. There is, however, an alternative formulation which is equivalent to the minimization in equation~\eqref{eq:10}, where the objective function does have a Lipschitz continuous gradient.
+\vspace{0.3cm}
+\begin{lemma}
+	The inverse Optimal Transport minimization \eqref{eq:10} has the same set of solutions as the following minimization:
+	\begin{equation}
+		\min _{\alpha, \beta, c} \Psi(\alpha, \beta, c):=F(\alpha, \beta, c)+R(c) ,
+		\label{eq:lemma}
+	\end{equation}
+	with
+	\[ F(\alpha, \beta, c)=-\langle\alpha, \mu\rangle-\langle\beta, \nu\rangle+\langle c, \hat{\pi}\rangle+\varepsilon \log \left(\left\langle e^{\left(\alpha_{i}+\beta_{j}-c_{i j}-\varepsilon\right) / \varepsilon}, 1\right\rangle\right) .\]
+	\label{lemma:inverseOT}
+\end{lemma}
+The proof of this lemma can be found in Appendix~\ref{sec:prooflemmainverseOT}. \par 
+At this point, we can consider our Algorithm \ref{alg:1}. We know that given $c$, the optimal coupling $\pihat$ between $\mu$ and $\nu$ as in \eqref{eq:eotcuturi} can be solved by applying $(\mu, \nu)$-Sinkhorn scaling on $K = e^{-\chat/\varepsilon}$, as in Section~\ref{sec:sinkhorn}. \citet{ma2021} advocated for a modified algorithm to the standard BCD, with similar updates for $\alpha$ and $\beta$, but a modification for the update of $\chat$ by splitting it into multiple steps for the inverse problem, as can be seen in Algorithm~\ref{alg:1}. After the Sinkhorn steps, as in Algorithm~\ref{alg:sinkhorn}, we do a scaling to compute the $m\times n$ matrix $K$, with 
+\begin{equation}
+	K_{ij} = \f{\pihat_{ij}}{e^{(\alpha_i +\beta_j)/\varepsilon}},
+	\label{eq:mawrong}
+\end{equation}
+for $i\in \{1, \dots, m\}, j \in \{1, \dots, n\}$. After all, $K = e^{-\chat/\varepsilon}$ and, from \eqref{eq:pi}
+\[\pihat = \exp\left(\f{\alpha + \beta - \chat - \varepsilon}{\varepsilon}\right).\]
+Then, you take a proximal gradient descent to obtain $\chat$: 
+\begin{equation}
+	\chat = \prox_{\gamma R} (-\varepsilon (\log(K) + 1)) := \argmin_{c \in \R^{m \times n}} \left\{	R(c) + \f{1}{2\gamma} ||c - \xi||^2\right\}.
+	\label{eq:prox}
+\end{equation}
+Here, $\xi := -\varepsilon (\log(K) + 1)$, $||\cdot||^2$ is the Frobenius norm and all operations are performed component-wisely. We stop when the Euclidean distance $||\cdot||^2$ between the updates of $u$ and $v$ is smaller than some convergence limit $k_u$ and $k_v$ respectively. \par 
+\vspace{0.3cm}
+\begin{remark}
+	Note that, since $\pihat$ only has information about the ratio $\chat/\varepsilon$, we can set $\varepsilon = 1$ without loss of generality. Then, we will recover $\chat/\varepsilon$, which is $c$ up to a constant scaling.
+\end{remark}
+\vspace{0.3cm}
+\begin{remark}
+	Notably, equation~\eqref{eq:mawrong} is different than in \citet{ma2021}, as they have obtained a transport plan that is slightly different than ours, 
+		\[ \pi_{ij}^* = \exp\left[\f{\alpha_i^* + \beta_j^* - c_{ij}^*}{\varepsilon}\right]. \] 
+	However, the extra $-\varepsilon$ term in our case was due to the chain rule in the proof of Lemma~\ref{lemma:dual}. This extra $\varepsilon$-term also alters the algorithm a bit from the algorithm of \citet{ma2021}. However, a constant scaling is not thought to matter, since $\alpha$ and $\beta$ are probability vectors and $\pihat$ is a probability matrix, so extra scaling will factor out with the normalization of $\alpha, \beta$ and $\pihat$. As can be seen in Appendix~\ref{sec:differencesma}, the original algorithm of \citet{ma2021} differs with a constant scaling of our algorithm, except for the $M_c$ terms, which are a result of our choice of $R$. 
+	\label{rem:mawrong}
+\end{remark}
+\vspace{0.3cm}
+\begin{algorithm}[t]
+	\caption{Cost Learning Algorithm for Inverse OT}
+	\textbf{Input: } Observed matrix $\hat{\pi} \in \mathbb{R}^{m \times n}$ and its marginals $\mu \in \mathbb{R}^m$, $\nu \in \mathbb{R}^n$\\
+	\textbf{Initialize:} $\alpha \in \mathbb{R}^{m \times 1}$, $\beta \in \mathbb{R}^{n \times 1}$, $u = \exp(\alpha / \varepsilon)$, $v = \exp(\beta / \varepsilon)$, $\chat \in \mathbb{R}^{m \times n}$ \\
+	\Repeat{\text{convergent: $||u^{(l)} - u^{(l+1)}||^2 < k_u$ and $||v^{(l)} - v^{(l+1)}||^2 < k_v$}}{
+		$K \leftarrow e^{-\chat / \varepsilon}$\;
+		$u \leftarrow \mu / (K v)$\;
+		$v \leftarrow \nu / (K^\top u)$\;
+		$K \leftarrow \hat{\pi} / (u v^\top)$\;
+		$c \leftarrow \text{prox}_{\gamma R}(-\varepsilon (\log(K) + 1))$\;
+	}
+	\KwOut{$\alpha = \varepsilon \log u$, $\beta = \varepsilon \log v$, $\chat$}
+	\label{alg:1}
+\end{algorithm}
+
+
+\section{Algorithm Implementation}
+\label{sec:algimp}
+Now, we can use Algorithm~\ref{alg:1} to find the cost matrix of multiple different scenarios. In this section, we will comment on the implementation of the algorithm, whereas the results will be described in Chapter~\ref{ch:results}. \par 
+In the application of Algorithm~\ref{alg:1}, a convergence limit of $k_u = k_v = 10^{-4}$ was used. 
+
+\subsection{Numerical Stability}
+Algorithm~\ref{alg:1} is implemented in Python. For initializing $\alpha, \beta$ and $\chat$, we have chosen a random initial conditions using \lstinline|numpy|; \lstinline|alpha = np.random.rand(n)|, \lstinline|beta = np.random.rand(n)| and \lstinline|c = np.random.rand(n, n)|, with $n$ the number of boxes. For testing purposes, we also used these random initial conditions multiplied by $100$. After running the algorithm multiple times on the same dataset, we confirmed that the output of the algorithm is indeed independent of the initialization. \par 
+
+\subsubsection{Floor}
+Note that $\pihat$ can contain quite a few zeros. For example, if we consider a simulation with only collapse towards the center point, we would not expect any movement from the center point outwards, which would result in zeros in $\pihat$. Due to the fact that in Algorithm~\ref{alg:1} we set $K = \pihat/(uv^\top)$, and later divide by both $Kv$ and $K^\top u$, if $\pihat$ has zero values, we will eventually end up dividing by $0$. To solve this division problem, we manually changed the zero-values in $\mu, \nu$ and $\pihat$ to a floor value, $1/N^3$, with $N$ the number of particles. We expect this change to not have a significant influence on the generated cost matrix, because if we slightly increase the floor value, it does not change the cost matrix significantly for smaller values of $n$ (the number of boxes). However, for larger $n$, a floor-value of $1/N$ will generate unexpected patterns in the cost matrix for the reference cases. These are thought to be artefacts of the floor and go away if we decrease the floor to $1/N^3$. After changing the values of $\mu, \nu$ and $\pihat$ slightly, we re-normalize to ensure they are probability vectors. 
+ 
+\subsection{Minimization and choosing $R(c)$}
+\label{sec:rc}
+At the end of the loop of Algorithm~\ref{alg:1}, we need to calculate the proximal gradient for the minimization. This proximal gradient can cause some problems, as for a larger number of boxes $n$, a standard Python minimization package, such as \lstinline|scipy.optimize.minimize|, usually creates a $n^2 \times n^2$ matrix to minimize the given expression, subsequently trying to create arrays which were too big for a personal computer. To solve these computational problems, we tried other minimization libraries, such as \lstinline|cvxpy|, but this ended up having the same problem. \par 
+However, noted that at this point in the algorithm, we have $\alpha, \beta$ fixed. Let us first consider the problem \eqref{eq:10discrete} without $R(c)$: 
+\[\min_{c \in \R^{m \times n}} \left\{ \langle c, \hat{\pi}\rangle + \varepsilon \sum_{i,j} e^{(\alpha_i + \beta_j - c_{ij})/\varepsilon} \right\} .\]
+To find the minimum, we can differentiate with respect to $c$ and set the derivative to $0$. This gives us, with the definitions $u = \exp(\alpha/\varepsilon)$ and $v = \exp(\beta/\varepsilon)$,
+\[\chat_{ij} = -\varepsilon \left[ \log\left(\f{\hat{\pi}_{ij}}{u_i v_j}\right) + 1 \right]. \]
+This is the minimum for all $R(c) \equiv 0$. If we now re-introduce $R(c)$, \citet{ma2021} propose a change in the Sinkhorn algorithm by taking the proximal operator to obtain the updated $c$,  
+\[\chat = \text{prox}_{\gamma R}(\xi) := \argmin_{c \in \R^{m \times n}} \left\{ R(c) + \f{1}{2\gamma} ||c-\xi||^2_2 \right\}.  \]
+Often, $\gamma$ is taken to be $1$. Note from Remark~\ref{rem:mawrong} that \citet{ma2021} use $\xi = -\varepsilon \log K$, while we use $\xi = -\varepsilon (\log(K) + 1)$. Furthermore, note that the inverse OT formulation \eqref{eq:10} is convex as long as $R(c)$ is convex or imposes a constraint onto a convex set \citep{ma2021}. Furthermore, from Theorem~\ref{thm:3} we know that \eqref{eq:10} has a unique equivalence set that minimizes $E$. Thus, even if we take $R(c)$ arbitrary, we can still characterize the entire optimal solution set using one minimizer of $E$. For example, if $(\alpha, \beta, c)$ minimizes $E$, then any other $(\bar{\alpha}, \bar{\beta}, \bar{c})$ will minimize $E$ if and only if $(\alpha, \beta, c) \sim (\bar{\alpha}, \bar{\beta}, \bar{c})$. \par 
+Note that if we choose a certain $R(c)$ for all our applications, we can compare the results without having to worry about different equivalence classes. \par
+\vspace{0.3cm}
+\begin{remark}[Projection Operator]
+	Note that $\text{prox}_{\gamma R}(\xi)$ is the generalization of the projection operator. Choose $R = \chi_U: \R^{m \times n} \ra \R \cup \{\infty\}$ for some closed, convex, non-empty $U \subset \R^{m \times n}$ given by 
+	\[\chi_U (x) = \begin{cases}
+		0, & x \in U; \\
+		+\infty, & x \notin U.
+	\end{cases}\]
+	We can see 
+	\begin{align*}
+		\text{prox}_{\gamma R}(\chat) = & \argmin_{c\in U} \begin{cases}
+			\f{1}{2\gamma} ||c-\chat||^2_2, & c \in U; \\
+			+\infty, & c \notin U;
+		\end{cases}
+		\\ 
+		= & \argmin_{c \in U} \f{1}{2\gamma} ||c-\chat||^2_2.
+	\end{align*}
+	\label{rem:proj}
+\end{remark}
+%https://en.wikipedia.org/wiki/Proximal_operator
+As this projection is easily calculated, we chose for $R$ the case $R(c) = \chi_U(c)$ for some $U \subseteq \R^{m\times n}$, so $\text{prox}_{\gamma R}(\xi)$ is the projection operator. If we now choose $U = [0, M_c]^{m \times n}$, we can see 
+\[\chat_{ij} = \begin{cases}
+	0, & \chat_{ij} < 0; \\
+	\chat_{ij}, & 0 \leq \chat_{ij} < M_c; \\
+	M_c, & \chat_{ij} \geq M_c.
+\end{cases}\]
+This choice of $R(c)$ is easily implementable using \lstinline|np.clip|. Furthermore, due to the fact that all values of $c$ which are higher then $M_c$ get clipped back to $M_c$, which improves numerical stability by implementing a ceiling on how high entries of $c$ can go. 
+
+
+
+
+
+
+
+
+
+
+
+
+

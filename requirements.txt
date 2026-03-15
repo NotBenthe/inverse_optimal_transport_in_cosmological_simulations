@@ -1,0 +1,25 @@
+# requirements
+numpy
+scipy
+swiftsimio
+matplotlib
+velociraptor
+VirgoDC
+LightconeIO
+warnings
+h5py
+numba
+unyt
+PIL
+itertools
+pandas
+cvxpy
+torch
+ot
+time
+random
+pylab
+cv2
+csv
+mpl_toolkits
+itertools
