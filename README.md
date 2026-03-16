@@ -4,7 +4,7 @@ The theory of Optimal Transport (OT) provides a powerful mathematical framework 
 
 In this thesis, we investigate the structure formation in cosmology using an inverse OT approach, focusing on the movement of particles. We utilize data from the FLAMINGO simulations, segmented into smaller boxes for computational efficiency. Our primary objective was to infer the cost matrix that is responsible for the particle motion within these simulations. We developed the theory of inverse OT and developed an algorithm to solve for the cost matrix, while addressing the ill-posed nature of inverse OT. This algorithm is applied to both reference cases and the FLAMINGO simulation data. The derived cost matrix shows a high degree of symmetry, consistent with an isotropic universe. As a proof of concept, a Markov Chain Monte Carlo simulation was done to test if the FLAMINGO cost matrix is a linear combination of reference cases. These Markov chains did not converge. However, this is thought to be because of the limited number of reference cases. 
 
-The final thesis can be found ![here](/inverse_optimal_transport_in_cosmological_simulations_Benthe_Sturre.pdf)
+This thesis is submitted as final thesis for a Bachelors in Mathematics and Astronomy, under supervision by Dr. M. Schaller, Dr. E. Sellentin and Dr. D. van der Hoeven. The final thesis can be found ![here](/inverse_optimal_transport_in_cosmological_simulations_Benthe_Sturre.pdf). 
 
 ## Requirements
 ```
